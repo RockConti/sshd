@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sshd.fullname" . }}
+  labels:
+    {{- include "sshd.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sshd.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sshd.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sshd.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+      - name: kubeconfig
+        image: busybox
+        command: ["sh"]
+        args: ["-c", "wget -P /kube https://dl.k8s.io/release/v1.21.2/bin/linux/amd64/kubectl && chmod 755 /kube/kubectl && /kube/kubectl config set-cluster default --server=https://kubernetes.default.svc --insecure-skip-tls-verify=true --kubeconfig=/kube/config && /kube/kubectl config set-credentials admin --token=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) --kubeconfig=/kube/config && /kube/kubectl config set-context defaultcontext --cluster=default --user=admin --kubeconfig=/kube/config && /kube/kubectl config use-context defaultcontext --kubeconfig=/kube/config"]
+        volumeMounts:
+        - name: kubeconfig
+          mountPath: /kube
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh"]
+          args: ["-c", "mv /etc/skel/.kube/kubectl /bin/ && useradd ${SSH_USERNAME} -m -s /bin/bash && echo ${SSH_USERNAME}:${SSH_PASSWORD} | chpasswd ${SSH_USERNAME} && /entry.sh && /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config"]
+          env:
+            - name: SSH_USERNAME
+              value: {{ .Values.sshd.username }}
+            - name: SSH_PASSWORD
+              value: {{ .Values.sshd.password }}
+            - name: SSH_ENABLE_PASSWORD_AUTH
+              value: "true"
+          ports:
+            - name: ssh
+              containerPort: 22
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: ssh
+          readinessProbe:
+            tcpSocket:
+              port: ssh
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: kubeconfig
+            mountPath: /etc/skel/.kube
+      volumes:
+      - name: kubeconfig
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

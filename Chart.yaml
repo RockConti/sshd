@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 3.0-stable
+description: A Helm chart for Kubernetes
+name: sshd
+type: application
+version: 0.2.1
