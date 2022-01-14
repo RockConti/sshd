@@ -1,8 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.rbac.role.name }}-rolebinding
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ .Values.rbac.role.metadata.name }}-rolebinding
 subjects:
   - kind: ServiceAccount
     name: {{ include "sshd.serviceAccountName" . }}

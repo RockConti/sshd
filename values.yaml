@@ -66,8 +66,13 @@ tolerations: []
 affinity: {}
 
 rbac:
-  role: 
-    name: "sshdrole"
+  role:
+    metadata:
+      name: "default"
+    rules: []
+  clusterrole:
+    metadata:
+      name: "default-cluster"
     rules: []
 
 sshd:
