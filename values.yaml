@@ -65,11 +65,9 @@ tolerations: []
 
 affinity: {}
 
+
 rbac:
   role: 
     name: "sshdrole"
     rules: []
 
-sshd:
-  username: "sshdguest"
-  password: "AAaa1234"

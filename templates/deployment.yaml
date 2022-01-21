@@ -42,13 +42,15 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh"]
-          args: ["-c", "mv /etc/skel/.kube/kubectl /bin/ && useradd ${SSH_USERNAME} -m -s /bin/bash && echo ${SSH_USERNAME}:${SSH_PASSWORD} | chpasswd ${SSH_USERNAME} && /entry.sh && /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config"]
+          args: ["-c", "mv /etc/skel/.kube/kubectl /bin/ && echo root:${SSH_PASSWORD} | chpasswd && /entry.sh && /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config"]
           env:
-            - name: SSH_USERNAME
-              value: {{ .Values.sshd.username }}
             - name: SSH_PASSWORD
               value: {{ .Values.sshd.password }}
-            - name: SSH_ENABLE_PASSWORD_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: sshsecret
+                  key: password
+            - name: SSH_ENABLE_ROOT_PASSWORD_AUTH
               value: "true"
           ports:
             - name: ssh
