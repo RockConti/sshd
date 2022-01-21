@@ -65,6 +65,7 @@ tolerations: []
 
 affinity: {}
 
+
 rbac:
   role:
     metadata:
@@ -75,6 +76,3 @@ rbac:
       name: "default-cluster"
     rules: []
 
-sshd:
-  username: "sshdguest"
-  password: "AAaa1234"
