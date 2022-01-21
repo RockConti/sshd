@@ -1,0 +1,86 @@
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: Role
+#metadata:
+#  name: {{ .Values.rbac.role.metadata.name }}
+#  namespace: {{ .Release.Namespace | quote }}
+#{{- if .Values.rbac.role.rules }}
+#rules:
+#  {{- range .Values.rbac.role.rules }}
+#  - apiGroups:
+#    {{- range .apiGroups }}
+#    - {{ . | quote }}
+#    {{- end }}
+#    resources:
+#    {{- range .resources }}
+#      - {{ . | quote }}
+#    {{- end }}
+#    verbs:
+#    {{- range .verbs }}
+#      - {{ . | quote }}
+#    {{- end }}
+#  {{- end }}
+#{{- end }}
+#---
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: RoleBinding
+#metadata:
+#  name: {{ .Values.rbac.role.name }}-rolebinding
+#  namespace: {{ .Release.Namespace | quote }}
+#subjects:
+#  - kind: ServiceAccount
+#    name: {{ include "sshd.serviceAccountName" . }}
+#roleRef:
+#  kind: Role
+#  name: {{ .Values.rbac.role.name }}
+#  apiGroup: "rbac.authorization.k8s.io"
+#---
+#apiVersion: rbac.authorization.k8s.io/v1
+#kind: ClusterRole
+#metadata:
+#  name: {{ .Values.rbac.clusterrole.metadata.name }}
+#  {{- if .Values.rbac.clusterrole.rules }}
+#rules:
+#  {{- range .Values.rbac.clusterrole.rules }}
+#  - apiGroups:
+#    {{- range .apiGroups }}
+#    - {{ . | quote }}
+#    {{- end }}
+#    resources:
+#    {{- range .resources }}
+#    - {{ . | quote }}
+#    {{- end }}
+#    verbs:
+#    {{- range .verbs }}
+#    - {{ . | quote }}
+#    {{- end }}
+#  {{- end }}
+#  {{- end }}
+#---
+#{{- if .Values.rbac.clusterrole.clusterrolebinding }}
+#  {{- range .Values.rbac.clusterrole.rolebinding }}
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: RoleBinding
+#  metadata:
+#    name: {{ .Values.rbac.role.name }}-rolebinding
+#    namespace: {{ . | quote }}
+#  subjects:
+#    - kind: ServiceAccount
+#      name: {{ include "sshd.serviceAccountName" . }}
+#  roleRef:
+#    kind: Role
+#    name: {{ .Values.rbac.role.name }}
+#    apiGroup: "rbac.authorization.k8s.io"
+#  {{- end }}
+#{{- else }}
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: ClusterRoleBinding
+#  metadata:
+#    name: {{ .Values.rbac.role.metadata.name }}-rolebinding
+#  subjects:
+#    - kind: ServiceAccount
+#      name: {{ include "sshd.serviceAccountName" . }}
+#  roleRef:
+#    kind: Role
+#    name: {{ .Values.rbac.role.name }}
+#    apiGroup: "rbac.authorization.k8s.io"
+#{{- end }}
