@@ -42,13 +42,12 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["sh"]
-          args: ["-c", "mv /etc/skel/.kube/kubectl /bin/ && echo root:${SSH_PASSWORD} | chpasswd && /entry.sh && /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config"]
+          args: ["-c", "mv /root/.kube/kubectl /bin/ && echo root:${SSH_PASSWORD} | chpasswd && /entry.sh && /usr/sbin/sshd -D -e -f /etc/ssh/sshd_config"]
           env:
             - name: SSH_PASSWORD
-              value: {{ .Values.sshd.password }}
               valueFrom:
                 secretKeyRef:
-                  name: sshsecret
+                  name: sshd-secret
                   key: password
             - name: SSH_ENABLE_ROOT_PASSWORD_AUTH
               value: "true"
@@ -66,7 +65,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
           - name: kubeconfig
-            mountPath: /etc/skel/.kube
+            mountPath: /root/.kube
       volumes:
       - name: kubeconfig
         emptyDir: {}

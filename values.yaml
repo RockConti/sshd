@@ -65,14 +65,13 @@ tolerations: []
 
 affinity: {}
 
-
 rbac:
   role:
     metadata:
-      name: "default"
+      name: "sshd-role"
     rules: []
   clusterrole:
     metadata:
-      name: "default-cluster"
+      name: "sshd-clusterrole"
     rules: []
 
